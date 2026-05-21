@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { normalizeEmployeeId } from "./employeeId";
 import { prisma } from "./db";
 
 const AUTH_COOKIE = "wfh_auth";
@@ -33,9 +34,11 @@ export async function verifyCredentials(
   identifier: string,
   password: string
 ): Promise<VerifyCredentialsResult> {
+  const normalizedIdentifier = identifier.trim();
+  const normalizedEmployeeId = normalizeEmployeeId(normalizedIdentifier);
   const user = await prisma.user.findFirst({
     where: {
-      OR: [{ email: identifier }, { employeeId: identifier }]
+      OR: [{ email: normalizedIdentifier }, { employeeId: normalizedEmployeeId }]
     }
   });
   if (!user) return { ok: false, reason: "INVALID_CREDENTIALS" };
@@ -62,7 +65,8 @@ export async function activateEmployeeAccount(
   activationCode: string,
   newPassword: string
 ): Promise<ActivateAccountResult> {
-  const user = await prisma.user.findFirst({ where: { employeeId } });
+  const normalizedEmployeeId = normalizeEmployeeId(employeeId);
+  const user = await prisma.user.findFirst({ where: { employeeId: normalizedEmployeeId } });
   if (!user) {
     return { ok: false, reason: "NOT_FOUND" };
   }

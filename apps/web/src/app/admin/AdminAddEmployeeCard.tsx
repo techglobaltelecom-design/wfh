@@ -6,7 +6,7 @@ import { useState } from "react";
 interface AddEmployeeResponse {
   ok: boolean;
   error?: string;
-  data?: { message?: string };
+  data?: { message?: string; activationCode?: string; employee?: { employeeId?: string | null } };
 }
 
 export function AdminAddEmployeeCard() {
@@ -43,7 +43,9 @@ export function AdminAddEmployeeCard() {
 
       setNotice({
         type: "success",
-        message: result.data?.message ?? "Employee added successfully."
+        message:
+          result.data?.message ??
+          `Employee ${result.data?.employee?.employeeId ?? ""} added. Share the activation code you entered.`
       });
       form.reset();
       router.refresh();
@@ -62,7 +64,7 @@ export function AdminAddEmployeeCard() {
       </p>
       <form className="grid" style={{ maxWidth: 560 }} onSubmit={onSubmit}>
         <input name="fullName" placeholder="Employee full name" required />
-        <input name="employeeId" placeholder="Employee ID (e.g. 1001)" required />
+        <input name="employeeId" placeholder="Employee ID (e.g. EMP001)" required />
         <input name="activationCode" placeholder="Activation code" required />
         <button type="submit" disabled={pending}>
           {pending ? "Adding..." : "Add Employee"}

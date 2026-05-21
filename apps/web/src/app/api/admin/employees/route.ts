@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
+import { normalizeEmployeeId } from "@/lib/employeeId";
 import { prisma } from "@/lib/db";
 import { fail, ok } from "@/server/http";
 import { writeAuditLog } from "@/server/audit/log";
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(await request.json());
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid input.");
   const input = parsed.data;
-  const normalizedEmployeeId = input.employeeId.trim();
+  const normalizedEmployeeId = normalizeEmployeeId(input.employeeId);
   const fallbackEmail = `${normalizedEmployeeId}@internal.local`;
   const email = input.email?.trim() || fallbackEmail;
 
@@ -69,7 +70,8 @@ export async function POST(request: Request) {
   });
 
   return ok({
-    message: "Employee added successfully. Share employee ID and activation code with the employee.",
-    employee
+    message: `Employee added. Share Employee ID ${employee.employeeId} and activation code "${input.activationCode.trim()}" for first-time activation.`,
+    employee,
+    activationCode: input.activationCode.trim()
   });
 }

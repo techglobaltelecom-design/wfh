@@ -1,10 +1,11 @@
 "use server";
 
 import { activateEmployeeAccount, createSession } from "@/lib/auth";
+import { normalizeEmployeeId } from "@/lib/employeeId";
 import { redirect } from "next/navigation";
 
 export async function activateAction(formData: FormData) {
-  const employeeId = String(formData.get("employeeId") ?? "").trim();
+  const employeeId = normalizeEmployeeId(String(formData.get("employeeId") ?? ""));
   const activationCode = String(formData.get("activationCode") ?? "").trim();
   const newPassword = String(formData.get("newPassword") ?? "");
 

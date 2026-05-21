@@ -25,28 +25,25 @@ async function main() {
     }
   });
 
-  await prisma.user.upsert({
-    where: { email: "employee@company.com" },
-    update: {
-      employeeId: "EMP001",
-      fullName: "Default Employee",
-      role: "EMPLOYEE"
-    },
-    create: {
-      email: "employee@company.com",
-      employeeId: "EMP001",
-      fullName: "Default Employee",
-      passwordHash: employeeTemporaryPassword,
-      activationCodeHash: employeeActivationCode,
-      requiresActivation: true,
-      role: "EMPLOYEE"
+  const demoEmployee = await prisma.user.findFirst({
+    where: {
+      OR: [{ email: "employee@company.com" }, { employeeId: "EMP001" }]
     }
   });
 
-  const demoEmployee = await prisma.user.findUnique({
-    where: { email: "employee@company.com" }
-  });
-  if (demoEmployee?.requiresActivation && !demoEmployee.activationCodeHash) {
+  if (!demoEmployee) {
+    await prisma.user.create({
+      data: {
+        email: "employee@company.com",
+        employeeId: "EMP001",
+        fullName: "Default Employee",
+        passwordHash: employeeTemporaryPassword,
+        activationCodeHash: employeeActivationCode,
+        requiresActivation: true,
+        role: "EMPLOYEE"
+      }
+    });
+  } else if (demoEmployee.requiresActivation && !demoEmployee.activationCodeHash) {
     await prisma.user.update({
       where: { id: demoEmployee.id },
       data: { activationCodeHash: employeeActivationCode }
