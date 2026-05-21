@@ -41,6 +41,28 @@ Set these for `apps/desktop-agent`:
 - `AGENT_HEARTBEAT_SECONDS` (default `60`)
 - `AGENT_IDLE_THRESHOLD_SECONDS` (default `300`)
 
+## Deploy Web on Hetzner (Recommended)
+Use your existing Hetzner VPS with Docker (no Render monthly fee beyond the server you already pay for).
+
+1. SSH into the server and install Docker + Docker Compose.
+2. Clone the repo:
+   - `git clone https://github.com/techglobaltelecom-design/wfh.git`
+   - `cd wfh`
+3. Create production env:
+   - `cp .env.production.example .env.production`
+   - Set strong values for `JWT_SECRET`, `SCREENSHOT_SIGNING_SECRET`, and `AGENT_INGEST_TOKEN`
+4. Start the app:
+   - `docker compose up -d --build`
+5. Open portal:
+   - `http://<your-server-ip>:3000`
+6. Point employee agents to your server:
+   - `AGENT_API_BASE_URL="http://<your-server-ip>:3000"` (or your domain with HTTPS)
+7. Optional but recommended:
+   - Put Nginx + Let's Encrypt in front for HTTPS on your domain.
+
+Data persistence:
+- SQLite DB and screenshots are stored in Docker volume `wfh-data` at `/data`.
+
 ## Deploy Web on Render
 - Push this repo to GitHub with `render.yaml` included.
 - In Render, create a new Blueprint and select this repository.

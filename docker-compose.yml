@@ -1,0 +1,18 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    environment:
+      DATABASE_URL: file:/data/dev.db
+      STORAGE_ROOT: /data/storage
+    volumes:
+      - wfh-data:/data
+    restart: unless-stopped
+
+volumes:
+  wfh-data:
