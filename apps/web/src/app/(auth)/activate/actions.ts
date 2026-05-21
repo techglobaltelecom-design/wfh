@@ -9,12 +9,12 @@ export async function activateAction(formData: FormData) {
   const newPassword = String(formData.get("newPassword") ?? "");
 
   if (newPassword.length < 8) {
-    return { error: "Password must be at least 8 characters." };
+    redirect("/activate?error=password");
   }
 
   const result = await activateEmployeeAccount(employeeId, activationCode, newPassword);
   if (!result.ok) {
-    return { error: "Invalid employee ID or activation code." };
+    redirect("/activate?error=invalid");
   }
 
   await createSession(result.user);

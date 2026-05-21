@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { verifySignedStorageKey } from "@/lib/storage";
+import { getStorageRootDir, verifySignedStorageKey } from "@/lib/storage";
 import { fail } from "@/server/http";
 import { writeAuditLog } from "@/server/audit/log";
 import { NextResponse } from "next/server";
@@ -31,7 +31,7 @@ export async function GET(
     targetId: screenshotId
   });
 
-  const abs = join(process.cwd(), "storage", record.storageKey);
+  const abs = join(getStorageRootDir(), record.storageKey);
   const content = await readFile(abs);
   return new NextResponse(content, {
     headers: {

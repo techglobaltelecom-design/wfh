@@ -94,7 +94,7 @@ export async function activateEmployeeAccount(
 }
 
 export async function createSession(user: SessionUser) {
-  const token = await new SignJWT(user)
+  const token = await new SignJWT({ ...user })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("12h")

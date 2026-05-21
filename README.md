@@ -37,9 +37,20 @@ Set these for `apps/desktop-agent`:
 - `AGENT_API_BASE_URL` (default `http://localhost:3000`)
 - `AGENT_INGEST_TOKEN` (must match web if configured)
 - `AGENT_EMPLOYEE_ID` (employee user id in DB)
-- `AGENT_SCREENSHOT_INTERVAL_MINUTES` (default `30`)
+- `AGENT_SCREENSHOT_INTERVAL_MINUTES` (default `5`)
 - `AGENT_HEARTBEAT_SECONDS` (default `60`)
 - `AGENT_IDLE_THRESHOLD_SECONDS` (default `300`)
+
+## Deploy Web on Render
+- Push this repo to GitHub with `render.yaml` included.
+- In Render, create a new Blueprint and select this repository.
+- Render provisions:
+  - Web service (`wfh-web`)
+  - Persistent disk at `/var/data` for SQLite DB + screenshots
+  - Required secrets (`JWT_SECRET`, `SCREENSHOT_SIGNING_SECRET`, `AGENT_INGEST_TOKEN`)
+- After first deploy, copy the Render URL (for example `https://wfh-web.onrender.com`) and set each agent env:
+  - `AGENT_API_BASE_URL="https://wfh-web.onrender.com"`
+- The startup command runs Prisma deploy migration + seed automatically.
 
 ## Windows EXE Build (Desktop Agent)
 - Build command:

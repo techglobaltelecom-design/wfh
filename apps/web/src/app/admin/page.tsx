@@ -15,6 +15,10 @@ export default async function AdminPage() {
     listPendingLeaves(),
     employeeReports()
   ]);
+  const initialPresence = dashboard.employeePresence.map((employee) => ({
+    ...employee,
+    statusAt: employee.statusAt ? employee.statusAt.toISOString() : null
+  }));
 
   return (
     <main className="container grid">
@@ -52,7 +56,7 @@ export default async function AdminPage() {
 
       <AdminPresenceBoard
         initialActiveNow={dashboard.activeNow}
-        initialPresence={dashboard.employeePresence}
+        initialPresence={initialPresence}
       />
 
       <section className="card">

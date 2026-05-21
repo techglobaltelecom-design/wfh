@@ -1,8 +1,12 @@
 import { createHmac } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
-const SCREENSHOT_DIR = join(process.cwd(), "storage", "screenshots");
+export function getStorageRootDir() {
+  return resolve(process.env.STORAGE_ROOT ?? join(process.cwd(), "storage"));
+}
+
+const SCREENSHOT_DIR = join(getStorageRootDir(), "screenshots");
 
 export async function storeBase64Screenshot(filename: string, imageBase64: string) {
   await mkdir(SCREENSHOT_DIR, { recursive: true });

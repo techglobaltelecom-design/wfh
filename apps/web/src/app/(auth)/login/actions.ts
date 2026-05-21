@@ -10,12 +10,9 @@ export async function loginAction(formData: FormData) {
   const result = await verifyCredentials(identifier, password);
   if (!result.ok) {
     if (result.reason === "ACTIVATION_REQUIRED") {
-      return {
-        error:
-          "First-time activation required. Use your employee ID in Activate Account."
-      };
+      redirect("/login?error=activation-required");
     }
-    return { error: "Invalid employee ID/email or password." };
+    redirect("/login?error=invalid-credentials");
   }
 
   await createSession(result.user);

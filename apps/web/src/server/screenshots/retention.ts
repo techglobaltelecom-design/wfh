@@ -1,6 +1,7 @@
 import { unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { prisma } from "@/lib/db";
+import { getStorageRootDir } from "@/lib/storage";
 
 function startOfTodayLocal() {
   const now = new Date();
@@ -17,7 +18,7 @@ export async function pruneOldScreenshots() {
   await Promise.all(
     stale.map(async (shot) => {
       try {
-        await unlink(join(process.cwd(), "storage", shot.storageKey));
+        await unlink(join(getStorageRootDir(), shot.storageKey));
       } catch {
         // Continue pruning even if a file is already gone.
       }

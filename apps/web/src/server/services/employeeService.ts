@@ -80,6 +80,7 @@ export async function markAttendanceOut(userId: string) {
 
 export async function startWork(userId: string) {
   const session = await markAttendanceIn(userId);
+  if (!session) return null;
   return prisma.attendanceSession.update({
     where: { id: session.id },
     data: { workStartedAt: new Date() }
