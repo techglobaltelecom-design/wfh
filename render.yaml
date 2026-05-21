@@ -2,7 +2,7 @@ services:
   - type: web
     name: wfh-web
     env: node
-    plan: free
+    plan: starter
     buildCommand: npm ci && npm run prisma:generate -w apps/web && npm run build -w apps/web
     startCommand: npm run prisma:migrate:deploy -w apps/web && npm run prisma:seed -w apps/web && npm run start -w apps/web
     envVars:

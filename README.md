@@ -44,6 +44,7 @@ Set these for `apps/desktop-agent`:
 ## Deploy Web on Render
 - Push this repo to GitHub with `render.yaml` included.
 - In Render, create a new Blueprint and select this repository.
+- Uses Render **Starter** plan (required for persistent disk; free tier does not support disks).
 - Render provisions:
   - Web service (`wfh-web`)
   - Persistent disk at `/var/data` for SQLite DB + screenshots
