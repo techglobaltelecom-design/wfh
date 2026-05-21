@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { fail, ok } from "@/server/http";
 import { pruneOldScreenshots } from "@/server/screenshots/retention";
 import { validateAgentToken } from "../_auth";
+import { resolveAgentUserId } from "../_resolveUser";
 import { z } from "zod";
 
 const schema = z.object({
@@ -19,6 +20,9 @@ export async function POST(request: Request) {
   if (!parsed.success) return fail(parsed.error.message);
   await pruneOldScreenshots();
 
+  const userId = await resolveAgentUserId(parsed.data.employeeId);
+  if (!userId) return fail("Unknown employee ID", 404);
+
   const storageKey = await storeBase64Screenshot(
     `${Date.now()}-${parsed.data.filename}`,
     parsed.data.imageBase64
@@ -26,7 +30,7 @@ export async function POST(request: Request) {
 
   const screenshot = await prisma.screenshot.create({
     data: {
-      userId: parsed.data.employeeId,
+      userId,
       storageKey,
       capturedAt: new Date(parsed.data.capturedAt)
     }
