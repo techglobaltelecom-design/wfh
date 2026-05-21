@@ -6,6 +6,7 @@ import Link from "next/link";
 import { decideLeaveAction } from "./actions";
 import { AdminPasswordCard } from "./AdminPasswordCard";
 import { AdminAddEmployeeCard } from "./AdminAddEmployeeCard";
+import { AdminEmployeeAccountsCard } from "./AdminEmployeeAccountsCard";
 import { AdminPresenceBoard } from "./AdminPresenceBoard";
 
 export default async function AdminPage() {
@@ -107,6 +108,7 @@ export default async function AdminPage() {
       </section>
 
       <AdminAddEmployeeCard />
+      <AdminEmployeeAccountsCard />
       <AdminPasswordCard />
     </main>
   );

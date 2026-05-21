@@ -20,7 +20,13 @@ export async function GET() {
 
   const employees = await prisma.user.findMany({
     where: { role: "EMPLOYEE" },
-    select: { id: true, fullName: true, employeeId: true, createdAt: true },
+    select: {
+      id: true,
+      fullName: true,
+      employeeId: true,
+      requiresActivation: true,
+      createdAt: true
+    },
     orderBy: { createdAt: "desc" },
     take: 100
   });

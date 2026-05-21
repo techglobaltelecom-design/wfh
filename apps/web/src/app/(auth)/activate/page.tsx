@@ -23,13 +23,13 @@ export default async function ActivatePage({
       <section className="card grid">
         <h1 className="page-title">First-Time Employee Activation</h1>
         <p className="subtitle">
-          Enter your employee ID and one-time activation code, then set your password.
+          Use the Employee ID shown in admin (example: 1005), not your full name.
         </p>
         {error && <p className="notice notice-error">{error}</p>}
         <form action={activateAction} className="grid">
           <label>
             Employee ID
-            <input name="employeeId" placeholder="EMP001" required />
+            <input name="employeeId" placeholder="Example: 1005" required />
           </label>
           <label>
             Activation Code

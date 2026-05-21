@@ -77,7 +77,7 @@ export async function activateEmployeeAccount(
     return { ok: false, reason: "MISSING_CODE" };
   }
 
-  const isValidCode = await bcrypt.compare(activationCode, user.activationCodeHash);
+  const isValidCode = await bcrypt.compare(activationCode.trim(), user.activationCodeHash);
   if (!isValidCode) {
     return { ok: false, reason: "WRONG_CODE" };
   }

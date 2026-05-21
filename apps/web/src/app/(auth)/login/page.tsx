@@ -3,7 +3,7 @@ import Link from "next/link";
 
 const errorMessages: Record<string, string> = {
   "activation-required":
-    "This account is not activated yet. Use Activate Account with your employee ID and one-time code.",
+    "This account is not activated yet. Ask admin to enable login, or use Activate Account with your Employee ID and activation code.",
   "invalid-credentials": "Invalid employee ID/email or password."
 };
 
@@ -19,12 +19,12 @@ export default async function LoginPage({
     <main className="container" style={{ maxWidth: 460, marginTop: 80 }}>
       <section className="card grid">
         <h1 className="page-title">WFH Login</h1>
-        <p className="subtitle">Use employee ID or email with your password.</p>
+        <p className="subtitle">Use your Employee ID (example: 1005) and password.</p>
         {error && <p className="notice notice-error">{error}</p>}
         <form action={loginAction} className="grid">
           <label>
             Employee ID or Email
-            <input name="identifier" placeholder="EMP001 or employee@company.com" required />
+            <input name="identifier" placeholder="Your Employee ID from admin" required />
           </label>
           <label>
             Password
@@ -34,9 +34,6 @@ export default async function LoginPage({
         </form>
         <p className="subtitle">
           First-time user? <Link href="/activate">Activate account</Link>
-        </p>
-        <p className="subtitle">
-          Demo activation: Employee ID `EMP001`, code `WELCOME123`
         </p>
       </section>
     </main>
