@@ -29,9 +29,8 @@ async function main() {
     where: { email: "employee@company.com" },
     update: {
       employeeId: "EMP001",
-      passwordHash: employeeTemporaryPassword,
-      activationCodeHash: employeeActivationCode,
-      requiresActivation: true
+      fullName: "Default Employee",
+      role: "EMPLOYEE"
     },
     create: {
       email: "employee@company.com",

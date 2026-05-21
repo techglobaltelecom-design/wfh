@@ -1,6 +1,7 @@
 "use server";
 
 import { activateEmployeeAccount, createSession } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 
 export async function activateAction(formData: FormData) {
@@ -14,6 +15,10 @@ export async function activateAction(formData: FormData) {
 
   const result = await activateEmployeeAccount(employeeId, activationCode, newPassword);
   if (!result.ok) {
+    const existing = await prisma.user.findFirst({ where: { employeeId } });
+    if (existing && !existing.requiresActivation) {
+      redirect("/activate?error=already-active");
+    }
     redirect("/activate?error=invalid");
   }
 
