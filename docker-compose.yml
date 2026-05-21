@@ -11,6 +11,8 @@ services:
       DATABASE_URL: file:/data/dev.db
       STORAGE_ROOT: /data/storage
       COOKIE_SECURE: "false"
+      TZ: Asia/Kolkata
+      APP_TIMEZONE: Asia/Kolkata
     volumes:
       - wfh-data:/data
     restart: unless-stopped

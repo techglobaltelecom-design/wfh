@@ -1,16 +1,9 @@
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { signStorageKey } from "@/lib/storage";
+import { dayBoundsForDateInput, formatDateInput } from "@/lib/timezone";
 import { fail, ok } from "@/server/http";
 import { pruneOldScreenshots } from "@/server/screenshots/retention";
-
-function dayWindow(date: Date) {
-  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
-  end.setMilliseconds(end.getMilliseconds() - 1);
-  return { start, end };
-}
 
 export async function GET(request: Request) {
   const session = await getSessionUser();
@@ -18,8 +11,8 @@ export async function GET(request: Request) {
   await pruneOldScreenshots();
 
   const dateParam = new URL(request.url).searchParams.get("date");
-  const selected = dateParam ? new Date(dateParam) : new Date();
-  const { start, end } = dayWindow(selected);
+  const selected = dateParam ?? formatDateInput();
+  const { start, end } = dayBoundsForDateInput(selected);
 
   const screenshots = await prisma.screenshot.findMany({
     where: {

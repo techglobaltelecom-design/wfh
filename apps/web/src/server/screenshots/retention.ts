@@ -2,14 +2,11 @@ import { unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { prisma } from "@/lib/db";
 import { getStorageRootDir } from "@/lib/storage";
-
-function startOfTodayLocal() {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-}
+import { dayBoundsForDateInput, formatDateInput } from "@/lib/timezone";
 
 export async function pruneOldScreenshots() {
-  const cutoff = startOfTodayLocal();
+  const today = formatDateInput();
+  const { start: cutoff } = dayBoundsForDateInput(today);
   const stale = await prisma.screenshot.findMany({
     where: { capturedAt: { lt: cutoff } },
     select: { id: true, storageKey: true }

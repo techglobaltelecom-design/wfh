@@ -1,16 +1,9 @@
 import { requireRole } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 import { signStorageKey } from "@/lib/storage";
+import { dayBoundsForDateInput, formatDateInput } from "@/lib/timezone";
 import { pruneOldScreenshots } from "@/server/screenshots/retention";
-
-function startOfDay(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-function endOfDay(date: Date) {
-  const next = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
-  return new Date(next.getTime() - 1);
-}
+import { LocalTime } from "@/components/LocalTime";
 
 export default async function ScreenshotTimelinePage({
   searchParams
@@ -20,10 +13,9 @@ export default async function ScreenshotTimelinePage({
   await requireRole("ADMIN");
   await pruneOldScreenshots();
   const params = await searchParams;
-  const selectedDate = params.date ? new Date(params.date) : new Date();
+  const dateValue = params.date ?? formatDateInput();
   const employeeId = params.employeeId;
-  const dayStart = startOfDay(selectedDate);
-  const dayEnd = endOfDay(selectedDate);
+  const { start: dayStart, end: dayEnd } = dayBoundsForDateInput(dateValue);
   const employees = await prisma.user.findMany({
     where: { role: "EMPLOYEE" },
     select: { id: true, fullName: true, employeeId: true },
@@ -44,7 +36,6 @@ export default async function ScreenshotTimelinePage({
     orderBy: { capturedAt: "asc" }
   });
 
-  const dateValue = dayStart.toISOString().slice(0, 10);
   const selectedEmployee = employees.find((employee) => employee.id === employeeId) ?? null;
 
   return (
@@ -91,7 +82,7 @@ export default async function ScreenshotTimelinePage({
               EMP ID: {row.user.employeeId ?? "N/A"}
             </p>
             <p style={{ margin: "8px 0 0" }}>
-              Time: {row.capturedAt.toLocaleTimeString()}
+              Time: <LocalTime value={row.capturedAt.toISOString()} />
             </p>
             <div className="row-wrap" style={{ marginTop: 10 }}>
               <a
