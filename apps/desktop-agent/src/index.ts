@@ -1,8 +1,17 @@
+import { dirname, resolve } from "node:path";
+import { config as loadDotenv } from "dotenv";
 import { loadConfig } from "./config";
 import { AgentApiClient } from "./http";
 import { DesktopTracker } from "./tracker";
 
+function bootstrapEnv() {
+  const isPackaged = "pkg" in process;
+  const envPath = isPackaged ? resolve(dirname(process.execPath), ".env") : resolve(process.cwd(), ".env");
+  loadDotenv({ path: envPath });
+}
+
 async function main() {
+  bootstrapEnv();
   const config = loadConfig();
   const api = new AgentApiClient({
     apiBaseUrl: config.apiBaseUrl,
