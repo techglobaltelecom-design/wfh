@@ -87,6 +87,12 @@ export class DesktopTracker {
   }
 
   private async captureScreenshot() {
+    const onBreak = await this.api.isEmployeeOnBreak(this.config.employeeId);
+    if (onBreak) {
+      console.log("[desktop-agent] skipping screenshot while employee is on break");
+      return;
+    }
+
     const image = await screenshot({ format: "png" });
     await this.api.sendScreenshot({
       employeeId: this.config.employeeId,

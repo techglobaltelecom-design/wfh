@@ -9,7 +9,7 @@ Monorepo containing:
 - Employee side: login/logout, attendance in/out, start/end work, break timer, task updates, leave requests, screenshot upload, work status updates.
 - First-time onboarding: employee activation using employee ID + one-time activation code + password setup.
 - Admin side: dashboard, attendance records, pending leave approval, employee reports, performance API, payroll console.
-- Advanced tracking: desktop agent sends activity heartbeats, idle-aware status, and periodic screenshots every 5 minutes by default.
+- Advanced tracking: desktop agent sends activity heartbeats, idle-aware status, and periodic screenshots every 5 minutes by default. Screenshots pause while the employee has an active break in the portal.
 - Smart payroll: periodic or manual payroll generation with total hours, overtime, deductions, and salary estimation.
 
 ## Quick Start

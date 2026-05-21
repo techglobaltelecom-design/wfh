@@ -78,4 +78,23 @@ export class AgentApiClient {
   sendScreenshot(payload: ScreenshotPayload) {
     return this.sendOrQueue("/api/agent/screenshot", payload);
   }
+
+  async isEmployeeOnBreak(employeeId: string) {
+    try {
+      const response = await fetch(
+        `${this.config.apiBaseUrl}/api/agent/break-status?employeeId=${encodeURIComponent(employeeId)}`,
+        {
+          headers: {
+            ...(this.config.agentToken ? { "x-agent-token": this.config.agentToken } : {})
+          }
+        }
+      );
+      if (!response.ok) return false;
+
+      const payload = (await response.json()) as { ok?: boolean; data?: { onBreak?: boolean } };
+      return Boolean(payload.ok && payload.data?.onBreak);
+    } catch {
+      return false;
+    }
+  }
 }

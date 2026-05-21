@@ -19,3 +19,7 @@ export interface AgentHeartbeatPayload {
   idleSeconds: number;
   sentAt: string;
 }
+
+export interface AgentBreakStatusPayload {
+  onBreak: boolean;
+}

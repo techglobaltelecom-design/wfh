@@ -102,6 +102,14 @@ export async function endWork(userId: string) {
   });
 }
 
+export async function isEmployeeOnBreak(userId: string) {
+  const activeBreak = await prisma.breakSession.findFirst({
+    where: { userId, endedAt: null },
+    select: { id: true }
+  });
+  return Boolean(activeBreak);
+}
+
 export async function startBreak(userId: string) {
   const { start, end } = dayRange();
   const todayAttendance = await prisma.attendanceSession.findFirst({
