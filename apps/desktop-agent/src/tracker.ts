@@ -29,11 +29,15 @@ export class DesktopTracker {
       });
     }
 
+    void this.api.verifyEmployee(this.config.employeeId);
     this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), this.config.heartbeatIntervalSeconds * 1000);
     this.screenshotTimer = setInterval(
       () => this.captureScreenshot(),
       this.config.screenshotIntervalMinutes * 60 * 1000
     );
+    setTimeout(() => {
+      void this.captureScreenshot();
+    }, 30_000);
     this.flushTimer = setInterval(() => this.tick(), 1000);
   }
 
@@ -87,19 +91,24 @@ export class DesktopTracker {
   }
 
   private async captureScreenshot() {
-    const onBreak = await this.api.isEmployeeOnBreak(this.config.employeeId);
-    if (onBreak) {
-      console.log("[desktop-agent] skipping screenshot while employee is on break");
-      return;
-    }
+    try {
+      const onBreak = await this.api.isEmployeeOnBreak(this.config.employeeId);
+      if (onBreak) {
+        console.log("[desktop-agent] skipping screenshot while employee is on break");
+        return;
+      }
 
-    const image = await screenshot({ format: "png" });
-    await this.api.sendScreenshot({
-      employeeId: this.config.employeeId,
-      filename: `capture-${Date.now()}.png`,
-      contentType: "image/png",
-      imageBase64: image.toString("base64"),
-      capturedAt: new Date().toISOString()
-    });
+      const image = await screenshot({ format: "png" });
+      await this.api.sendScreenshot({
+        employeeId: this.config.employeeId,
+        filename: `capture-${Date.now()}.png`,
+        contentType: "image/png",
+        imageBase64: image.toString("base64"),
+        capturedAt: new Date().toISOString()
+      });
+      console.log("[desktop-agent] screenshot uploaded");
+    } catch (error) {
+      console.error("[desktop-agent] screenshot failed:", error);
+    }
   }
 }

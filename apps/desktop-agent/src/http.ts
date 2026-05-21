@@ -62,7 +62,9 @@ export class AgentApiClient {
     try {
       await this.post(path, body);
       await this.flushQueue();
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`[desktop-agent] upload failed ${path}: ${message}`);
       this.enqueue(path, body);
     }
   }
@@ -77,6 +79,34 @@ export class AgentApiClient {
 
   sendScreenshot(payload: ScreenshotPayload) {
     return this.sendOrQueue("/api/agent/screenshot", payload);
+  }
+
+  async verifyEmployee(employeeId: string) {
+    try {
+      const response = await fetch(
+        `${this.config.apiBaseUrl}/api/agent/break-status?employeeId=${encodeURIComponent(employeeId)}`,
+        {
+          headers: {
+            ...(this.config.agentToken ? { "x-agent-token": this.config.agentToken } : {})
+          }
+        }
+      );
+      if (response.status === 404) {
+        console.error(
+          `[desktop-agent] employee ID "${employeeId}" not found on server. Check AGENT_EMPLOYEE_ID in .env matches admin Employee ID.`
+        );
+        return false;
+      }
+      if (!response.ok) {
+        console.error(`[desktop-agent] server check failed (${response.status}). Check AGENT_INGEST_TOKEN.`);
+        return false;
+      }
+      console.log(`[desktop-agent] employee ID "${employeeId}" verified on server`);
+      return true;
+    } catch (error) {
+      console.error("[desktop-agent] cannot reach server:", error);
+      return false;
+    }
   }
 
   async isEmployeeOnBreak(employeeId: string) {

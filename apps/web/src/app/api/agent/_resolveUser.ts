@@ -1,13 +1,16 @@
 import { prisma } from "@/lib/db";
-import { normalizeEmployeeId } from "@/lib/employeeId";
+import { employeeIdCandidates } from "@/lib/employeeId";
 
 export async function resolveAgentUserId(employeeRef: string) {
-  const normalizedEmployeeId = normalizeEmployeeId(employeeRef);
+  const candidates = employeeIdCandidates(employeeRef);
   const user = await prisma.user.findFirst({
     where: {
-      OR: [{ employeeId: normalizedEmployeeId }, { id: employeeRef.trim() }]
+      OR: [
+        ...candidates.map((employeeId) => ({ employeeId })),
+        { id: employeeRef.trim() }
+      ]
     },
-    select: { id: true }
+    select: { id: true, employeeId: true }
   });
 
   return user?.id ?? null;
