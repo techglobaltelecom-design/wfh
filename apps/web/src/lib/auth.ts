@@ -103,7 +103,8 @@ export async function createSession(user: SessionUser) {
   const cookieStore = await cookies();
   cookieStore.set(AUTH_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    // Secure cookies only work over HTTPS. For HTTP deployments (e.g. IP:3000), set COOKIE_SECURE=false.
+    secure: process.env.COOKIE_SECURE === "true",
     sameSite: "lax",
     path: "/"
   });

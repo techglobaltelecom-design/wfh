@@ -10,6 +10,7 @@ services:
     environment:
       DATABASE_URL: file:/data/dev.db
       STORAGE_ROOT: /data/storage
+      COOKIE_SECURE: "false"
     volumes:
       - wfh-data:/data
     restart: unless-stopped
