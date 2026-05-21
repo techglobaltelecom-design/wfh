@@ -42,6 +42,16 @@ async function main() {
       role: "EMPLOYEE"
     }
   });
+
+  const demoEmployee = await prisma.user.findUnique({
+    where: { email: "employee@company.com" }
+  });
+  if (demoEmployee?.requiresActivation && !demoEmployee.activationCodeHash) {
+    await prisma.user.update({
+      where: { id: demoEmployee.id },
+      data: { activationCodeHash: employeeActivationCode }
+    });
+  }
 }
 
 main()

@@ -17,6 +17,10 @@ type VerifyCredentialsResult =
   | { ok: true; user: SessionUser }
   | { ok: false; reason: "INVALID_CREDENTIALS" | "ACTIVATION_REQUIRED" };
 
+export type ActivateAccountResult =
+  | { ok: true; user: SessionUser }
+  | { ok: false; reason: "NOT_FOUND" | "ALREADY_ACTIVE" | "WRONG_CODE" | "MISSING_CODE" };
+
 function authSecret() {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
@@ -57,18 +61,21 @@ export async function activateEmployeeAccount(
   employeeId: string,
   activationCode: string,
   newPassword: string
-): Promise<VerifyCredentialsResult> {
+): Promise<ActivateAccountResult> {
   const user = await prisma.user.findFirst({ where: { employeeId } });
-  if (!user || !user.activationCodeHash) {
-    return { ok: false, reason: "INVALID_CREDENTIALS" };
+  if (!user) {
+    return { ok: false, reason: "NOT_FOUND" };
   }
   if (!user.requiresActivation) {
-    return { ok: false, reason: "INVALID_CREDENTIALS" };
+    return { ok: false, reason: "ALREADY_ACTIVE" };
+  }
+  if (!user.activationCodeHash) {
+    return { ok: false, reason: "MISSING_CODE" };
   }
 
   const isValidCode = await bcrypt.compare(activationCode, user.activationCodeHash);
   if (!isValidCode) {
-    return { ok: false, reason: "INVALID_CREDENTIALS" };
+    return { ok: false, reason: "WRONG_CODE" };
   }
 
   const passwordHash = await bcrypt.hash(newPassword, 10);

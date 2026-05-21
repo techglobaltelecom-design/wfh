@@ -3,8 +3,11 @@ import { activateAction } from "./actions";
 
 const errorMessages: Record<string, string> = {
   password: "Password must be at least 8 characters.",
-  invalid: "Invalid employee ID or activation code. Ask admin for a fresh activation code.",
-  "already-active": "This employee is already activated. Use Login instead."
+  "wrong-code": "Activation code is incorrect. Use the exact code shared by admin (demo: WELCOME123).",
+  "not-found": "Employee ID was not found. Check EMP001 spelling or ask admin to create the employee.",
+  "missing-code":
+    "This employee has no activation code on file. Ask admin to reissue a new activation code.",
+  "already-active": "This employee is already activated. Go to Login and use your password."
 };
 
 export default async function ActivatePage({
