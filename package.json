@@ -1,0 +1,16 @@
+{
+  "name": "wfh-management-system",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev -w apps/web",
+    "dev:agent": "npm run dev -w apps/desktop-agent",
+    "build": "npm run build -w apps/web && npm run build -w apps/desktop-agent",
+    "lint": "npm run lint -w apps/web && npm run lint -w apps/desktop-agent",
+    "test": "npm run test -w apps/web && npm run test -w apps/desktop-agent"
+  }
+}

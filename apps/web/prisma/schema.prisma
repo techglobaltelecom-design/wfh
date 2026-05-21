@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  ADMIN
+}
+
+enum WorkStatus {
+  ONLINE
+  BUSY
+  AWAY
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id           String              @id @default(cuid())
+  email        String              @unique
+  employeeId   String?             @unique
+  fullName     String
+  passwordHash String
+  activationCodeHash String?
+  requiresActivation Boolean       @default(false)
+  role         Role
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  attendances  AttendanceSession[]
+  breaks       BreakSession[]
+  taskUpdates  DailyTaskUpdate[]
+  leaveRequest LeaveRequest[]
+  screenshots  Screenshot[]
+  statuses     WorkStatusEvent[]
+  activities   ActivityEvent[]
+  payrolls     PayrollEntry[]
+  audits       AuditLog[]         @relation("ActorAuditLogs")
+}
+
+model AttendanceSession {
+  id            String    @id @default(cuid())
+  userId        String
+  date          DateTime
+  markedInAt    DateTime
+  markedOutAt   DateTime?
+  workStartedAt DateTime?
+  workEndedAt   DateTime?
+  totalMinutes  Int       @default(0)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
+model BreakSession {
+  id         String    @id @default(cuid())
+  userId     String
+  startedAt  DateTime
+  endedAt    DateTime?
+  durationMs Int?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DailyTaskUpdate {
+  id          String   @id @default(cuid())
+  userId      String
+  taskDate    DateTime
+  summary     String
+  blockers    String?
+  progressPct Int
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LeaveRequest {
+  id           String      @id @default(cuid())
+  userId        String
+  fromDate      DateTime
+  toDate        DateTime
+  reason        String
+  status        LeaveStatus @default(PENDING)
+  decisionNote  String?
+  reviewedById  String?
+  reviewedAt    DateTime?
+  createdAt     DateTime    @default(now())
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Screenshot {
+  id         String   @id @default(cuid())
+  userId     String
+  capturedAt DateTime
+  storageKey String
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WorkStatusEvent {
+  id        String     @id @default(cuid())
+  userId    String
+  status    WorkStatus
+  at        DateTime   @default(now())
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ActivityEvent {
+  id            String   @id @default(cuid())
+  userId        String
+  activeSeconds Int
+  idleSeconds   Int
+  capturedAt    DateTime
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PayrollEntry {
+  id               String   @id @default(cuid())
+  userId           String
+  periodStart      DateTime
+  periodEnd        DateTime
+  totalHours       Float
+  overtimeHours    Float
+  deductionAmount  Float
+  estimatedSalary  Float
+  activeWorkPct    Float
+  generatedAt      DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, periodStart, periodEnd])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  targetType String
+  targetId   String?
+  metadata   String?
+  createdAt  DateTime @default(now())
+  actor      User?    @relation("ActorAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([action, createdAt])
+}

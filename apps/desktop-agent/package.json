@@ -1,0 +1,21 @@
+{
+  "name": "@wfh/desktop-agent",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "lint": "node -e \"console.log('No linter configured for desktop-agent yet')\"",
+    "test": "tsx --test tests/**/*.test.ts"
+  },
+  "dependencies": {
+    "@wfh/shared": "*",
+    "screenshot-desktop": "^1.15.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}
