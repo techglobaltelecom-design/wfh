@@ -1,4 +1,3 @@
-import { logoutAction } from "@/app/actions/logout";
 import { requireRole } from "@/lib/rbac";
 import { getAdminDashboard, employeeReports } from "@/server/services/adminService";
 import { listPendingLeaves } from "@/server/services/employeeService";
@@ -9,7 +8,7 @@ import { AdminAddEmployeeCard } from "./AdminAddEmployeeCard";
 import { AdminPresenceBoard } from "./AdminPresenceBoard";
 
 export default async function AdminPage() {
-  const session = await requireRole("ADMIN");
+  await requireRole("ADMIN");
   const [dashboard, leaves, reports] = await Promise.all([
     getAdminDashboard(),
     listPendingLeaves(),
@@ -22,17 +21,9 @@ export default async function AdminPage() {
 
   return (
     <main className="container grid">
-      <header className="card header-row">
-        <div>
-          <h1 className="page-title">Admin Dashboard</h1>
-          <p>{session.fullName}</p>
-          <p className="muted">EMP ID: {session.employeeId ?? "N/A"}</p>
-        </div>
-        <form action={logoutAction}>
-          <button type="submit" className="button-muted">
-            Logout
-          </button>
-        </form>
+      <header className="card">
+        <h1 className="page-title">Admin Dashboard</h1>
+        <p className="subtitle">Overview, presence, leaves, and quick links.</p>
       </header>
 
       <section className="stats-grid">

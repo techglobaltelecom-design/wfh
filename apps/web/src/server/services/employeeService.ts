@@ -110,6 +110,31 @@ export async function isEmployeeOnBreak(userId: string) {
   return Boolean(activeBreak);
 }
 
+export async function isEmployeeClockedInToday(userId: string) {
+  const { start, end } = dayRange();
+  const openSession = await prisma.attendanceSession.findFirst({
+    where: {
+      userId,
+      markedOutAt: null,
+      markedInAt: { gte: start, lt: end }
+    },
+    select: { id: true }
+  });
+  return Boolean(openSession);
+}
+
+export async function resolvePresenceStatus(
+  userId: string,
+  latestStatus: "ONLINE" | "BUSY" | "AWAY" = "AWAY"
+): Promise<"ONLINE" | "BUSY" | "AWAY"> {
+  const [clockedIn, onBreak] = await Promise.all([
+    isEmployeeClockedInToday(userId),
+    isEmployeeOnBreak(userId)
+  ]);
+  if (!clockedIn || onBreak) return "AWAY";
+  return latestStatus;
+}
+
 export async function startBreak(userId: string) {
   const { start, end } = dayRange();
   const todayAttendance = await prisma.attendanceSession.findFirst({
@@ -227,7 +252,8 @@ export async function employeeSnapshot(userId: string) {
     })
   ]);
 
-  return { attendance, breaks, tasks, leaves, status: status?.status ?? "AWAY" };
+  const resolvedStatus = await resolvePresenceStatus(userId, status?.status ?? "AWAY");
+  return { attendance, breaks, tasks, leaves, status: resolvedStatus };
 }
 
 export async function approveLeave(

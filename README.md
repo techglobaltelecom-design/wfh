@@ -30,7 +30,6 @@ Monorepo containing:
 - Admin seeds/invites employees with unique `employeeId`.
 - Employee opens `/activate`, enters `employeeId` + activation code, and sets a password.
 - After activation, normal login uses `employeeId` or email with password at `/login`.
-- Demo seeded activation: employee ID `EMP001`, activation code `WELCOME123`.
 
 ## Desktop Agent Env
 Set these for `apps/desktop-agent`:

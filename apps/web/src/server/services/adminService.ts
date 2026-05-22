@@ -1,5 +1,10 @@
 import { prisma } from "@/lib/db";
-import { activeWorkPercentage, aggregateHoursByUser, listEmployees } from "./employeeService";
+import {
+  activeWorkPercentage,
+  aggregateHoursByUser,
+  listEmployees,
+  resolvePresenceStatus
+} from "./employeeService";
 
 export async function getEmployeePresenceSnapshot() {
   const employees = await listEmployees();
@@ -9,9 +14,10 @@ export async function getEmployeePresenceSnapshot() {
         where: { userId: employee.id },
         orderBy: { at: "desc" }
       });
+      const status = await resolvePresenceStatus(employee.id, latestStatus?.status ?? "AWAY");
       return {
         ...employee,
-        status: latestStatus?.status ?? "AWAY",
+        status,
         statusAt: latestStatus?.at ?? null
       };
     })
