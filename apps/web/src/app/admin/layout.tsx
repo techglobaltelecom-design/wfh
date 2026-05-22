@@ -7,7 +7,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <>
       <div className="container admin-layout-bar">
-        <AdminTopBar fullName={session.fullName} employeeId={session.employeeId} />
+        <AdminTopBar fullName={session.fullName} employeeId={session.employeeId ?? null} />
       </div>
       {children}
     </>
