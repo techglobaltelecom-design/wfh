@@ -78,7 +78,7 @@ export default async function EmployeePage() {
     })
   ]);
   const nowMs = Date.now();
-  const effectiveStatus = snapshot.status === "BUSY" ? "ONLINE" : snapshot.status;
+  const effectiveStatus = snapshot.status;
 
   const activeAttendance =
     todayAttendances.find((entry) => entry.markedOutAt === null) ?? null;

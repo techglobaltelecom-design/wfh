@@ -123,16 +123,27 @@ export async function isEmployeeClockedInToday(userId: string) {
   return Boolean(openSession);
 }
 
-export async function resolvePresenceStatus(
+export async function resolveAgentPresenceStatus(
   userId: string,
-  latestStatus: "ONLINE" | "BUSY" | "AWAY" = "AWAY"
+  agentStatus: "ONLINE" | "BUSY" | "AWAY"
 ): Promise<"ONLINE" | "BUSY" | "AWAY"> {
   const [clockedIn, onBreak] = await Promise.all([
     isEmployeeClockedInToday(userId),
     isEmployeeOnBreak(userId)
   ]);
   if (!clockedIn || onBreak) return "AWAY";
-  return latestStatus;
+  return agentStatus;
+}
+
+export async function resolveDisplayPresenceStatus(
+  userId: string
+): Promise<"ONLINE" | "AWAY"> {
+  const [clockedIn, onBreak] = await Promise.all([
+    isEmployeeClockedInToday(userId),
+    isEmployeeOnBreak(userId)
+  ]);
+  if (clockedIn && !onBreak) return "ONLINE";
+  return "AWAY";
 }
 
 export async function startBreak(userId: string) {
@@ -252,7 +263,7 @@ export async function employeeSnapshot(userId: string) {
     })
   ]);
 
-  const resolvedStatus = await resolvePresenceStatus(userId, status?.status ?? "AWAY");
+  const resolvedStatus = await resolveDisplayPresenceStatus(userId);
   return { attendance, breaks, tasks, leaves, status: resolvedStatus };
 }
 

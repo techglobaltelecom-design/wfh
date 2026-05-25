@@ -4,7 +4,7 @@ import {
   activeWorkPercentage,
   aggregateHoursByUser,
   listEmployees,
-  resolvePresenceStatus
+  resolveDisplayPresenceStatus
 } from "./employeeService";
 
 export async function getEmployeePresenceSnapshot() {
@@ -15,7 +15,7 @@ export async function getEmployeePresenceSnapshot() {
         where: { userId: employee.id },
         orderBy: { at: "desc" }
       });
-      const status = await resolvePresenceStatus(employee.id, latestStatus?.status ?? "AWAY");
+      const status = await resolveDisplayPresenceStatus(employee.id);
       return {
         ...employee,
         status,
