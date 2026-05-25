@@ -1,18 +1,22 @@
 import { requireRole } from "@/lib/rbac";
-import { getAdminDashboard, employeeReports } from "@/server/services/adminService";
+import { formatDateInput } from "@/lib/timezone";
+import { getAdminDashboard, employeeReports, getEmployeesDailyWorkTime } from "@/server/services/adminService";
 import { listPendingLeaves } from "@/server/services/employeeService";
 import Link from "next/link";
 import { decideLeaveAction } from "./actions";
 import { AdminPasswordCard } from "./AdminPasswordCard";
 import { AdminAddEmployeeCard } from "./AdminAddEmployeeCard";
 import { AdminPresenceBoard } from "./AdminPresenceBoard";
+import { AdminDailyWorkTime } from "./AdminDailyWorkTime";
 
 export default async function AdminPage() {
   await requireRole("ADMIN");
-  const [dashboard, leaves, reports] = await Promise.all([
+  const today = formatDateInput();
+  const [dashboard, leaves, reports, dailyWorkTime] = await Promise.all([
     getAdminDashboard(),
     listPendingLeaves(),
-    employeeReports()
+    employeeReports(),
+    getEmployeesDailyWorkTime(today)
   ]);
   const initialPresence = dashboard.employeePresence.map((employee) => ({
     ...employee,
@@ -49,6 +53,8 @@ export default async function AdminPage() {
         initialActiveNow={dashboard.activeNow}
         initialPresence={initialPresence}
       />
+
+      <AdminDailyWorkTime initialDate={today} initialRows={dailyWorkTime} />
 
       <section className="card">
         <h2 className="section-title">Leave Approval</h2>
