@@ -40,6 +40,12 @@ Set these for `apps/desktop-agent`:
 - `AGENT_HEARTBEAT_SECONDS` (default `60`)
 - `AGENT_IDLE_THRESHOLD_SECONDS` (default `300`)
 
+## Night shift / work day rollover
+By default the work day follows the calendar (midnight). For night shifts (e.g. 10 PM–6 AM), set on the web app:
+- `APP_DAY_START_HOUR="6"` — work day runs 6:00 AM to 5:59 AM next morning (Asia/Kolkata or `APP_TIMEZONE`).
+- Example: clock-in at 10 PM Monday counts as Monday’s work day until 6 AM Tuesday.
+- Open clock-in sessions also stay active across midnight (clock-out still works after 12 AM).
+
 ## Deploy Web on Hetzner (Recommended)
 Use your existing Hetzner VPS with Docker (no Render monthly fee beyond the server you already pay for).
 

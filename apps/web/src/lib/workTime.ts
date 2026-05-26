@@ -1,16 +1,5 @@
 import { prisma } from "@/lib/db";
-
-function dayRangeForDate(date: Date) {
-  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
-  return { start, end };
-}
-
-export function parseLocalDateInput(dateStr: string) {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
+import { businessDayRangeForDateInput } from "@/lib/timezone";
 
 function closedSessionSeconds(session: { markedInAt: Date; markedOutAt: Date | null }) {
   if (!session.markedOutAt) return 0;
@@ -55,22 +44,24 @@ export type EmployeeDailyWorkTime = {
 export async function getEmployeeDailyWorkTime(
   userId: string,
   employee: { fullName: string; employeeId: string | null },
-  date: Date,
+  dateInput: string,
   nowMs = Date.now()
 ): Promise<EmployeeDailyWorkTime> {
-  const { start, end } = dayRangeForDate(date);
+  const { start, end } = businessDayRangeForDateInput(dateInput);
   const [attendances, breaks, activeBreak] = await Promise.all([
     prisma.attendanceSession.findMany({
       where: {
         userId,
-        markedInAt: { gte: start, lt: end }
+        markedInAt: { lt: end },
+        OR: [{ markedOutAt: null }, { markedOutAt: { gt: start } }]
       },
       orderBy: { markedInAt: "asc" }
     }),
     prisma.breakSession.findMany({
       where: {
         userId,
-        startedAt: { gte: start, lt: end }
+        startedAt: { lt: end },
+        OR: [{ endedAt: null }, { endedAt: { gt: start } }]
       },
       orderBy: { startedAt: "asc" }
     }),

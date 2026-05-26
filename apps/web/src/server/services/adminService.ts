@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
-import { getEmployeeDailyWorkTime, parseLocalDateInput } from "@/lib/workTime";
+import { formatDateInput } from "@/lib/timezone";
+import { getEmployeeDailyWorkTime } from "@/lib/workTime";
 import {
   activeWorkPercentage,
   aggregateHoursByUser,
@@ -56,7 +57,7 @@ export async function getAdminDashboard() {
 }
 
 export async function getEmployeesDailyWorkTime(dateInput?: string) {
-  const date = dateInput ? parseLocalDateInput(dateInput) : new Date();
+  const date = dateInput ?? formatDateInput();
   const employees = await listEmployees();
 
   return Promise.all(

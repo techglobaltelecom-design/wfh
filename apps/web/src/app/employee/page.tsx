@@ -1,5 +1,6 @@
 import { logoutAction } from "@/app/actions/logout";
 import { prisma } from "@/lib/db";
+import { businessDayRangeForInstant } from "@/lib/timezone";
 import { requireRole } from "@/lib/rbac";
 import { employeeSnapshot } from "@/server/services/employeeService";
 import { submitLeaveRequest, submitTaskUpdate } from "./actions";
@@ -26,10 +27,7 @@ function breakBelongsToAttendance(
 
 export default async function EmployeePage() {
   const session = await requireRole("EMPLOYEE");
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const tomorrowStart = new Date(todayStart);
-  tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+  const { start: todayStart, end: tomorrowStart } = businessDayRangeForInstant();
 
   const dayOfWeek = todayStart.getDay(); // 0=Sunday, 1=Monday ... 6=Saturday
   const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
@@ -54,7 +52,8 @@ export default async function EmployeePage() {
     prisma.attendanceSession.findMany({
       where: {
         userId: session.id,
-        markedInAt: { gte: todayStart, lt: tomorrowStart }
+        markedInAt: { lt: tomorrowStart },
+        OR: [{ markedOutAt: null }, { markedOutAt: { gt: todayStart } }]
       },
       orderBy: { markedInAt: "desc" }
     }),
@@ -68,7 +67,8 @@ export default async function EmployeePage() {
     prisma.breakSession.findMany({
       where: {
         userId: session.id,
-        startedAt: { gte: todayStart, lt: tomorrowStart }
+        startedAt: { lt: tomorrowStart },
+        OR: [{ endedAt: null }, { endedAt: { gt: todayStart } }]
       },
       orderBy: { startedAt: "desc" }
     }),

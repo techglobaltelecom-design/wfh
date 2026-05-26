@@ -93,11 +93,12 @@ export function AdminDailyWorkTime({
         <div>
           <h2 className="section-title">Daily Work Time</h2>
           <p className="muted" style={{ marginTop: -6, marginBottom: 0 }}>
-            Work time per employee for the selected day (clock-in to clock-out minus breaks).
+            Work time per employee for the selected work day (clock-in to clock-out minus breaks).
+            Night shifts use the configured work-day start hour, not midnight.
           </p>
         </div>
         <label className="admin-date-filter">
-          <span className="muted">Date</span>
+          <span className="muted">Work day</span>
           <input
             type="date"
             value={selectedDate}

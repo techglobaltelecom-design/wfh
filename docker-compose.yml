@@ -13,6 +13,7 @@ services:
       COOKIE_SECURE: "false"
       TZ: Asia/Kolkata
       APP_TIMEZONE: Asia/Kolkata
+      APP_DAY_START_HOUR: "6"
     volumes:
       - wfh-data:/data
     restart: unless-stopped
