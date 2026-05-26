@@ -1,7 +1,7 @@
 import { requireRole } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
 import { signStorageKey } from "@/lib/storage";
-import { dayBoundsForDateInput, formatDateInput } from "@/lib/timezone";
+import { businessDayRangeForDateInput, formatDateInput } from "@/lib/timezone";
 import { pruneOldScreenshots } from "@/server/screenshots/retention";
 import { LocalTime } from "@/components/LocalTime";
 
@@ -15,7 +15,7 @@ export default async function ScreenshotTimelinePage({
   const params = await searchParams;
   const dateValue = params.date ?? formatDateInput();
   const employeeId = params.employeeId;
-  const { start: dayStart, end: dayEnd } = dayBoundsForDateInput(dateValue);
+  const { start: dayStart, end: dayEnd } = businessDayRangeForDateInput(dateValue);
   const employees = await prisma.user.findMany({
     where: { role: "EMPLOYEE" },
     select: { id: true, fullName: true, employeeId: true },
@@ -27,7 +27,7 @@ export default async function ScreenshotTimelinePage({
       ...(employeeId ? { userId: employeeId } : {}),
       capturedAt: {
         gte: dayStart,
-        lte: dayEnd
+        lt: dayEnd
       }
     },
     include: {
@@ -43,7 +43,7 @@ export default async function ScreenshotTimelinePage({
       <section className="card">
         <h1 className="page-title">Screenshot Timeline</h1>
         <p className="subtitle">
-          Screenshots stay visible for the full selected day, including exact capture time.
+          Screenshots stay visible for today and yesterday (e.g. on the 27th you see the 26th and 27th; the 25th is removed). Pick a day to view captures with exact times.
           {selectedEmployee ? ` Filtered: ${selectedEmployee.fullName}.` : " Showing all employees."}
         </p>
         <form method="GET" className="row-wrap">

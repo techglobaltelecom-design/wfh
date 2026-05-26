@@ -94,14 +94,16 @@ export function formatDateInput(date = new Date(), timeZone = getAppTimeZone()) 
 export function businessDayRangeForDateInput(dateStr: string, timeZone = getAppTimeZone()) {
   const startHour = getBusinessDayStartHour();
   const [year, month, day] = dateStr.split("-").map(Number);
-
-  if (startHour === 0) {
-    return dayBoundsForDateInput(dateStr, timeZone);
-  }
-
-  const start = zonedLocalTimeToUtc(year, month, day, startHour, 0, 0, timeZone);
   const next = addCalendarDays(year, month, day, 1);
-  const end = zonedLocalTimeToUtc(next.year, next.month, next.day, startHour, 0, 0, timeZone);
+
+  const start =
+    startHour === 0
+      ? zonedLocalTimeToUtc(year, month, day, 0, 0, 0, timeZone)
+      : zonedLocalTimeToUtc(year, month, day, startHour, 0, 0, timeZone);
+  const end =
+    startHour === 0
+      ? zonedLocalTimeToUtc(next.year, next.month, next.day, 0, 0, 0, timeZone)
+      : zonedLocalTimeToUtc(next.year, next.month, next.day, startHour, 0, 0, timeZone);
 
   return { start, end };
 }
@@ -126,4 +128,18 @@ export function dayBoundsForDateInput(dateStr: string, timeZone = getAppTimeZone
 export function parseBusinessDateInput(dateStr: string) {
   const [year, month, day] = dateStr.split("-").map(Number);
   return new Date(year, month - 1, day);
+}
+
+export function shiftBusinessDateInput(dateStr: string, deltaDays: number) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const shifted = addCalendarDays(year, month, day, deltaDays);
+  return `${shifted.year}-${padDatePart(shifted.month)}-${padDatePart(shifted.day)}`;
+}
+
+export function businessDateInputDaysBefore(
+  daysBefore: number,
+  date = new Date(),
+  timeZone = getAppTimeZone()
+) {
+  return shiftBusinessDateInput(formatBusinessDateInput(date, timeZone), -daysBefore);
 }

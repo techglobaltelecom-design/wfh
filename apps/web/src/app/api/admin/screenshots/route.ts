@@ -1,7 +1,7 @@
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { signStorageKey } from "@/lib/storage";
-import { dayBoundsForDateInput, formatDateInput } from "@/lib/timezone";
+import { businessDayRangeForDateInput, formatDateInput } from "@/lib/timezone";
 import { fail, ok } from "@/server/http";
 import { pruneOldScreenshots } from "@/server/screenshots/retention";
 
@@ -12,13 +12,13 @@ export async function GET(request: Request) {
 
   const dateParam = new URL(request.url).searchParams.get("date");
   const selected = dateParam ?? formatDateInput();
-  const { start, end } = dayBoundsForDateInput(selected);
+  const { start, end } = businessDayRangeForDateInput(selected);
 
   const screenshots = await prisma.screenshot.findMany({
     where: {
       capturedAt: {
         gte: start,
-        lte: end
+        lt: end
       }
     },
     include: { user: { select: { fullName: true, employeeId: true } } },
