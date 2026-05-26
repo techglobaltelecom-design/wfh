@@ -71,7 +71,10 @@ export async function getEmployeeDailyWorkTime(
     })
   ]);
 
-  const activeAttendance = attendances.find((entry) => entry.markedOutAt === null) ?? null;
+  const activeAttendance =
+    attendances.find(
+      (entry) => entry.markedOutAt === null && entry.markedInAt >= start && entry.markedInAt < end
+    ) ?? null;
   const dayGrossClosedSeconds = attendances
     .filter((entry) => entry.id !== activeAttendance?.id)
     .reduce((acc, entry) => acc + closedSessionSeconds(entry), 0);

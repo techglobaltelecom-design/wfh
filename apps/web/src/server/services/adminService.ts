@@ -4,6 +4,7 @@ import { getEmployeeDailyWorkTime } from "@/lib/workTime";
 import {
   activeWorkPercentage,
   aggregateHoursByUser,
+  closeStaleOpenSessionsForUser,
   listEmployees,
   resolveDisplayPresenceStatus
 } from "./employeeService";
@@ -12,6 +13,7 @@ export async function getEmployeePresenceSnapshot() {
   const employees = await listEmployees();
   const employeePresence = await Promise.all(
     employees.map(async (employee) => {
+      await closeStaleOpenSessionsForUser(employee.id);
       const latestStatus = await prisma.workStatusEvent.findFirst({
         where: { userId: employee.id },
         orderBy: { at: "desc" }

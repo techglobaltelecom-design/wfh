@@ -19,11 +19,69 @@ async function getOpenAttendanceSession(userId: string) {
   });
 }
 
-export async function markAttendanceIn(userId: string) {
-  const openSession = await getOpenAttendanceSession(userId);
-  if (openSession) return openSession;
+async function getOpenAttendanceSessionForBusinessDay(userId: string, date = new Date()) {
+  const { start, end } = businessDayRangeForInstant(date);
+  return prisma.attendanceSession.findFirst({
+    where: {
+      userId,
+      markedOutAt: null,
+      markedInAt: { gte: start, lt: end }
+    },
+    orderBy: { markedInAt: "desc" }
+  });
+}
 
+async function closeAttendanceSession(
+  session: { id: string; markedInAt: Date; userId: string },
+  markedOutAt: Date
+) {
+  const activeBreak = await prisma.breakSession.findFirst({
+    where: { userId: session.userId, endedAt: null },
+    orderBy: { startedAt: "desc" }
+  });
+  if (activeBreak) {
+    await prisma.breakSession.update({
+      where: { id: activeBreak.id },
+      data: {
+        endedAt: markedOutAt,
+        durationMs: markedOutAt.getTime() - activeBreak.startedAt.getTime()
+      }
+    });
+  }
+
+  const totalMinutes = Math.max(
+    0,
+    Math.floor((markedOutAt.getTime() - session.markedInAt.getTime()) / 60000)
+  );
+
+  return prisma.attendanceSession.update({
+    where: { id: session.id },
+    data: { markedOutAt, totalMinutes }
+  });
+}
+
+async function closeStaleOpenSession(userId: string) {
+  const open = await getOpenAttendanceSession(userId);
+  if (!open) return;
+
+  const { start: currentDayStart } = businessDayRangeForInstant();
+  if (open.markedInAt >= currentDayStart) return;
+
+  const { end: sessionDayEnd } = businessDayRangeForInstant(open.markedInAt);
+  await closeAttendanceSession(open, sessionDayEnd);
+}
+
+export async function closeStaleOpenSessionsForUser(userId: string) {
+  await closeStaleOpenSession(userId);
+}
+
+export async function markAttendanceIn(userId: string) {
   const { start, end } = dayRange();
+  const openInCurrentDay = await getOpenAttendanceSessionForBusinessDay(userId);
+  if (openInCurrentDay) return openInCurrentDay;
+
+  await closeStaleOpenSession(userId);
+
   const todaySession = await prisma.attendanceSession.findFirst({
     where: {
       userId,
@@ -51,29 +109,7 @@ export async function markAttendanceOut(userId: string) {
   }
 
   const markedOutAt = new Date();
-  const activeBreak = await prisma.breakSession.findFirst({
-    where: { userId, endedAt: null },
-    orderBy: { startedAt: "desc" }
-  });
-  if (activeBreak) {
-    await prisma.breakSession.update({
-      where: { id: activeBreak.id },
-      data: {
-        endedAt: markedOutAt,
-        durationMs: markedOutAt.getTime() - activeBreak.startedAt.getTime()
-      }
-    });
-  }
-
-  const totalMinutes = Math.max(
-    0,
-    Math.floor((markedOutAt.getTime() - open.markedInAt.getTime()) / 60000)
-  );
-
-  return prisma.attendanceSession.update({
-    where: { id: open.id },
-    data: { markedOutAt, totalMinutes }
-  });
+  return closeAttendanceSession(open, markedOutAt);
 }
 
 export async function startWork(userId: string) {
@@ -109,7 +145,7 @@ export async function isEmployeeOnBreak(userId: string) {
 }
 
 export async function isEmployeeClockedInToday(userId: string) {
-  const openSession = await getOpenAttendanceSession(userId);
+  const openSession = await getOpenAttendanceSessionForBusinessDay(userId);
   return Boolean(openSession);
 }
 
@@ -137,7 +173,7 @@ export async function resolveDisplayPresenceStatus(
 }
 
 export async function startBreak(userId: string) {
-  const todayAttendance = await getOpenAttendanceSession(userId);
+  const todayAttendance = await getOpenAttendanceSessionForBusinessDay(userId);
   if (!todayAttendance) return null;
 
   const activeBreak = await prisma.breakSession.findFirst({
