@@ -5,6 +5,7 @@ import {
   activeWorkPercentage,
   aggregateHoursByUser,
   closeStaleOpenSessionsForUser,
+  ensureAttendanceIntegrity,
   listEmployees,
   resolveDisplayPresenceStatus
 } from "./employeeService";
@@ -13,7 +14,7 @@ export async function getEmployeePresenceSnapshot() {
   const employees = await listEmployees();
   const employeePresence = await Promise.all(
     employees.map(async (employee) => {
-      await closeStaleOpenSessionsForUser(employee.id);
+      await ensureAttendanceIntegrity(employee.id);
       const latestStatus = await prisma.workStatusEvent.findFirst({
         where: { userId: employee.id },
         orderBy: { at: "desc" }
@@ -61,6 +62,8 @@ export async function getAdminDashboard() {
 export async function getEmployeesDailyWorkTime(dateInput?: string) {
   const date = dateInput ?? formatDateInput();
   const employees = await listEmployees();
+
+  await Promise.all(employees.map((employee) => ensureAttendanceIntegrity(employee.id)));
 
   return Promise.all(
     employees.map((employee) => getEmployeeDailyWorkTime(employee.id, employee, date))

@@ -75,7 +75,46 @@ export async function closeStaleOpenSessionsForUser(userId: string) {
   await closeStaleOpenSession(userId);
 }
 
+/** Fix forgotten clock-outs and multi-day bad records in the database. */
+export async function repairCorruptedAttendanceSessions(userId: string) {
+  await closeStaleOpenSession(userId);
+
+  const maxShiftMs = 16 * 60 * 60 * 1000;
+  const closed = await prisma.attendanceSession.findMany({
+    where: { userId, markedOutAt: { not: null } }
+  });
+
+  for (const session of closed) {
+    if (!session.markedOutAt) continue;
+    const durationMs = session.markedOutAt.getTime() - session.markedInAt.getTime();
+    if (durationMs <= maxShiftMs) continue;
+
+    const { end: sessionDayEnd } = businessDayRangeForInstant(session.markedInAt);
+    const repairedOut =
+      session.markedOutAt.getTime() > sessionDayEnd.getTime()
+        ? sessionDayEnd
+        : session.markedOutAt;
+
+    await prisma.attendanceSession.update({
+      where: { id: session.id },
+      data: {
+        markedOutAt: repairedOut,
+        totalMinutes: Math.max(
+          0,
+          Math.floor((repairedOut.getTime() - session.markedInAt.getTime()) / 60000)
+        )
+      }
+    });
+  }
+}
+
+export async function ensureAttendanceIntegrity(userId: string) {
+  await repairCorruptedAttendanceSessions(userId);
+}
+
 export async function markAttendanceIn(userId: string) {
+  await ensureAttendanceIntegrity(userId);
+
   const { start, end } = dayRange();
   const openInCurrentDay = await getOpenAttendanceSessionForBusinessDay(userId);
   if (openInCurrentDay) return openInCurrentDay;

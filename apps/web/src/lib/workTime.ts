@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/db";
 import { businessDayRangeForDateInput } from "@/lib/timezone";
 
+/** Longest allowed single shift before we treat the record as corrupted. */
+const MAX_SHIFT_HOURS = 16;
+
 function sessionSecondsInRange(
   session: { markedInAt: Date; markedOutAt: Date | null },
   rangeStart: Date,
@@ -12,15 +15,6 @@ function sessionSecondsInRange(
   const clipStart = Math.max(sessionStart, rangeStart.getTime());
   const clipEnd = Math.min(sessionEnd, rangeEnd.getTime());
   return Math.max(0, Math.floor((clipEnd - clipStart) / 1000));
-}
-
-function sessionOverlapsRange(
-  session: { markedInAt: Date; markedOutAt: Date | null },
-  rangeStart: Date,
-  rangeEnd: Date
-) {
-  const sessionEnd = session.markedOutAt?.getTime() ?? Number.POSITIVE_INFINITY;
-  return session.markedInAt.getTime() < rangeEnd.getTime() && sessionEnd > rangeStart.getTime();
 }
 
 function breakBelongsToAttendance(
@@ -37,7 +31,7 @@ function breakBelongsToAttendance(
 }
 
 function breakSecondsInRange(
-  breakSession: { startedAt: Date; endedAt: Date | null; durationMs: number | null },
+  breakSession: { startedAt: Date; endedAt: Date | null },
   rangeStart: Date,
   rangeEnd: Date,
   nowMs: number
@@ -77,20 +71,19 @@ export async function getEmployeeDailyWorkTime(
   nowMs = Date.now()
 ): Promise<EmployeeDailyWorkTime> {
   const { start, end } = businessDayRangeForDateInput(dateInput);
+
   const [attendances, breaks, activeBreak] = await Promise.all([
     prisma.attendanceSession.findMany({
       where: {
         userId,
-        markedInAt: { lt: end },
-        OR: [{ markedOutAt: null }, { markedOutAt: { gt: start } }]
+        markedInAt: { gte: start, lt: end }
       },
       orderBy: { markedInAt: "asc" }
     }),
     prisma.breakSession.findMany({
       where: {
         userId,
-        startedAt: { lt: end },
-        OR: [{ endedAt: null }, { endedAt: { gt: start } }]
+        startedAt: { gte: start, lt: end }
       },
       orderBy: { startedAt: "asc" }
     }),
@@ -100,26 +93,17 @@ export async function getEmployeeDailyWorkTime(
     })
   ]);
 
-  const dayAttendances = attendances.filter((entry) => sessionOverlapsRange(entry, start, end));
+  const activeAttendance = attendances.find((entry) => entry.markedOutAt === null) ?? null;
 
-  const activeAttendance =
-    dayAttendances.find(
-      (entry) =>
-        entry.markedOutAt === null && entry.markedInAt >= start && entry.markedInAt < end
-    ) ?? null;
-
-  const dayGrossSeconds = dayAttendances
+  const dayGrossSeconds = attendances
     .filter((entry) => entry.id !== activeAttendance?.id)
-    .reduce(
-      (acc, entry) => acc + sessionSecondsInRange(entry, start, end, nowMs),
-      0
-    );
+    .reduce((acc, entry) => acc + sessionSecondsInRange(entry, start, end, nowMs), 0);
 
   const validBreaks = breaks.filter((entry) =>
-    breakBelongsToAttendance(entry.startedAt, dayAttendances, nowMs)
+    breakBelongsToAttendance(entry.startedAt, attendances, nowMs)
   );
   const activeBreakInAttendance =
-    activeBreak && breakBelongsToAttendance(activeBreak.startedAt, dayAttendances, nowMs)
+    activeBreak && breakBelongsToAttendance(activeBreak.startedAt, attendances, nowMs)
       ? activeBreak
       : null;
 
@@ -131,9 +115,7 @@ export async function getEmployeeDailyWorkTime(
 
   const displaySession =
     activeAttendance ??
-    [...dayAttendances]
-      .filter((entry) => entry.markedInAt >= start && entry.markedInAt < end)
-      .sort((a, b) => b.markedInAt.getTime() - a.markedInAt.getTime())[0] ??
+    [...attendances].sort((a, b) => b.markedInAt.getTime() - a.markedInAt.getTime())[0] ??
     null;
 
   return {
@@ -185,3 +167,5 @@ export function resolveLiveWorkSeconds(
 
   return { workSeconds, breakSeconds, grossSeconds };
 }
+
+export { MAX_SHIFT_HOURS };
