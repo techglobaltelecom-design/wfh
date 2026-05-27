@@ -108,8 +108,13 @@ export async function markAttendanceOut(userId: string) {
     return null;
   }
 
-  const markedOutAt = new Date();
-  return closeAttendanceSession(open, markedOutAt);
+  const { start: currentDayStart } = businessDayRangeForInstant();
+  if (open.markedInAt < currentDayStart) {
+    await closeStaleOpenSession(userId);
+    return null;
+  }
+
+  return closeAttendanceSession(open, new Date());
 }
 
 export async function startWork(userId: string) {

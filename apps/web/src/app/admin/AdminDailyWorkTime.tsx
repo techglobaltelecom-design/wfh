@@ -75,7 +75,7 @@ export function AdminDailyWorkTime({
   const displayRows = useMemo(
     () =>
       rows.map((row) => {
-        const live = isToday ? resolveLiveWorkSeconds(row, nowMs) : row;
+        const live = isToday && row.clockedIn ? resolveLiveWorkSeconds(row, nowMs) : row;
         return {
           ...row,
           workSeconds: live.workSeconds,
