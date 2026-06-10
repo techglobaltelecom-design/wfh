@@ -43,7 +43,7 @@ export default async function ScreenshotTimelinePage({
       <section className="card">
         <h1 className="page-title">Screenshot Timeline</h1>
         <p className="subtitle">
-          Screenshots stay visible for today and yesterday (e.g. on the 27th you see the 26th and 27th; the 25th is removed). Pick a day to view captures with exact times.
+          Screenshots stay visible for the full calendar month and are removed when a new month starts. Pick a day to view captures with exact times.
           {selectedEmployee ? ` Filtered: ${selectedEmployee.fullName}.` : " Showing all employees."}
         </p>
         <form method="GET" className="row-wrap">

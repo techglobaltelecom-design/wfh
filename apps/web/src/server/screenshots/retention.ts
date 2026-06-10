@@ -2,14 +2,16 @@ import { unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { prisma } from "@/lib/db";
 import { getStorageRootDir } from "@/lib/storage";
-import { businessDayRangeForDateInput, businessDateInputDaysBefore } from "@/lib/timezone";
+import { businessDayRangeForDateInput, formatDateInput } from "@/lib/timezone";
 
-/** Today + yesterday stay visible; older screenshots are removed on prune. */
-const SCREENSHOT_RETENTION_DAYS = 2;
+function currentMonthStart() {
+  const today = formatDateInput();
+  const monthStartDate = `${today.slice(0, 7)}-01`;
+  return businessDayRangeForDateInput(monthStartDate).start;
+}
 
 export async function pruneOldScreenshots() {
-  const oldestKeptDate = businessDateInputDaysBefore(SCREENSHOT_RETENTION_DAYS - 1);
-  const { start: cutoff } = businessDayRangeForDateInput(oldestKeptDate);
+  const cutoff = currentMonthStart();
   const stale = await prisma.screenshot.findMany({
     where: { capturedAt: { lt: cutoff } },
     select: { id: true, storageKey: true }
